@@ -1,0 +1,6 @@
+@SmartTrafficLight_Web_HostAddress = http://localhost:5212
+
+GET {{SmartTrafficLight_Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,90 @@
+## ===========================
+## .NET / C# Build Output
+## ===========================
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## ===========================
+## NuGet Packages
+## ===========================
+*.nupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+## ===========================
+## Visual Studio / Rider / VS Code
+## ===========================
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+.idea/
+
+## ===========================
+## User-specific & Local Settings
+## ===========================
+appsettings.Development.json
+launchSettings.json
+
+## ===========================
+## Windows
+## ===========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## ===========================
+## macOS
+## ===========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## ===========================
+## Python (YOLOv8)
+## ===========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+*.egg
+
+## ===========================
+## ML.NET Model Files
+## ===========================
+*.zip
+*.mlnet
+
+## ===========================
+## Logs & Temp Files
+## ===========================
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+
+## ===========================
+## Publish / Deploy Output
+## ===========================
+publish/
+out/
