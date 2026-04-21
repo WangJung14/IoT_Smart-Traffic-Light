@@ -90,3 +90,4 @@ publish/
 out/
 
 TASKS.MD
+docker-compose.yml
