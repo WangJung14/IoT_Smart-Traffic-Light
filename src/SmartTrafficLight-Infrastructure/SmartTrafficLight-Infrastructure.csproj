@@ -5,6 +5,10 @@
     <ProjectReference Include="..\SmartTrafficLight-Domain\SmartTrafficLight-Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <RootNamespace>SmartTrafficLight_Infrastructure</RootNamespace>
