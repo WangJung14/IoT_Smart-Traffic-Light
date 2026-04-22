@@ -1,5 +1,8 @@
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartTrafficLight_Domain.Interfaces;
 using SmartTrafficLight_Infrastructure.Data;
+using SmartTrafficLight_Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +17,11 @@ builder.Services.AddControllers(options =>
 {
     options.Conventions.Add(new RoutePrefixConvention("api/v1"));
 });
+
+// ===================== Dependency Injection =====================
+//builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
+//builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
+//builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
 
 // ===================== Database =====================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -43,7 +51,7 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 // ===================== Health Check Endpoint =====================
-app.MapGet("/api/health/db", async (AppDbContext dbContext) =>
+app.MapGet("/api/health/db", async ([FromServices] AppDbContext dbContext) =>
 {
     try
     {
@@ -57,5 +65,17 @@ app.MapGet("/api/health/db", async (AppDbContext dbContext) =>
         return Results.Json(new { Status = "Unhealthy", Database = "Error", Error = ex.Message, Timestamp = DateTime.UtcNow }, statusCode: 503);
     }
 });
+
+// ===================== Test Database Connection Endpoint =====================
+//app.MapGet("/api/test-db", async ([FromServices] IIntersectionRepository repo) =>
+//{
+//    
+//    var intersections = await repo.GetAllAsync();
+
+//    if (intersections.Any())
+//        return Results.Ok(new { Message = "Kết nối Database THÀNH CÔNG! 🎉", Data = intersections });
+
+//    return Results.Ok(new { Message = "Kết nối thành công nhưng chưa có dữ liệu." });
+//});
 
 app.Run();
