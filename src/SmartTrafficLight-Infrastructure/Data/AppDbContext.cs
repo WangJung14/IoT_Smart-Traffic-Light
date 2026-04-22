@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
+using SmartTrafficLight_Domain.Entities;
+using SmartTrafficLight_Domain.ValueObjects;
 
 namespace SmartTrafficLight_Infrastructure.Data;
 
@@ -12,8 +15,11 @@ public class AppDbContext : DbContext
     {
     }
 
-    // === DbSet declarations will be added here as entities are created ===
-    // Example: public DbSet<TrafficLight> TrafficLights => Set<TrafficLight>();
+    //Dbset table in database
+    public DbSet<Intersection> Intersections => Set<Intersection>();
+    public DbSet<TrafficLight> TrafficLights => Set<TrafficLight>();
+    public DbSet<TrafficData> TrafficDatas => Set<TrafficData>();
+    public DbSet<PredictionResult> PredictionResults => Set<PredictionResult>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
