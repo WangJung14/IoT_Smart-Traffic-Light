@@ -13,4 +13,5 @@ public interface ILightControlService
 
     // Get aggregated data for the Admin dashboard
     Task<DashboardDataDto> GetDashboardDataAsync(Guid intersectionId);
+
 }
