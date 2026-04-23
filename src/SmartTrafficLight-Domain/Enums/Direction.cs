@@ -1,4 +1,4 @@
-﻿namespace SmartTrafficLight_Domain.Enums
+﻿namespace SmartTrafficLight.Domain.Enums
 {
     public enum Direction
     {
