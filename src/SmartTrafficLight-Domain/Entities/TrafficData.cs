@@ -1,4 +1,5 @@
-﻿using SmartTrafficLight_Domain.Enums;
+﻿
+using SmartTrafficLight.Domain.Enums;
 
 namespace SmartTrafficLight_Domain.Entities
 {
