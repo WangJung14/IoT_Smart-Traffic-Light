@@ -1,6 +1,4 @@
-﻿
-
-namespace SmartTrafficLight_Domain.Entities
+﻿namespace SmartTrafficLight_Domain.Entities
 {
     public class Intersection
     {

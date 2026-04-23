@@ -1,5 +1,4 @@
 ﻿using SmartTrafficLight.Domain.Enums;
-using SmartTrafficLight_Domain.Enums;
 using SmartTrafficLight_Domain.ValueObjects;
 
 namespace SmartTrafficLight_Domain.Entities
