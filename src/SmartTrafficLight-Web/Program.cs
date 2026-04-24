@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartTrafficLight.Application.Interfaces;
+using SmartTrafficLight.Application.Services;
 using SmartTrafficLight_Application.Services;
 using SmartTrafficLight_Domain.Interfaces;
 using SmartTrafficLight_Infrastructure.Data;
@@ -13,7 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<ITrafficDetectionService,TrafficDetectionService>();
+builder.Services.AddScoped<ITrafficDetectionService, TrafficDetectionService>();
+builder.Services.AddScoped<IMLPredictionService, MLPredictionService>();
 
 // Config API Route Prefix
 builder.Services.AddControllers(options =>
