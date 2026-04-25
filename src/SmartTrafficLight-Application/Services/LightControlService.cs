@@ -11,6 +11,7 @@ public class LightControlService : ILightControlService
 {
     private readonly ITrafficLightRepository _lightRepo;
     private readonly ITrafficDataRepository _dataRepo;
+    private readonly IIntersectionRepository _intersectionRepo;
     private readonly ILogger<LightControlService> _logger;
 
 
@@ -28,8 +29,39 @@ public class LightControlService : ILightControlService
 
     public async Task<DashboardDataDto> GetDashboardDataAsync(Guid intersectionId)
     {
-        // implement later
-        throw new NotImplementedException();
+        _logger.LogInformation("Fetching dashboard data for intersection {IntersectionId}", intersectionId);
+
+        // 1. Get traffic lights for the intersection
+        var intersection = await _intersectionRepo.GetByIdAsync(intersectionId);
+        if(intersection == null) throw new Exception("Intersection not found.");
+
+        // 2. Get recent traffic data for the intersection
+        var lights = await _lightRepo.GetByIntersectionIdAsync(intersectionId);
+        var mainLight = lights.FirstOrDefault() ?? new TrafficLight { CurrentState = LightState.RED };
+
+        // 3. Get data from the last 5 minutes
+        var recentTraffic = await _dataRepo.GetRecentDataAsync(intersectionId, 5);
+        var currentCount = recentTraffic.OrderByDescending(x => x.Timestamp).FirstOrDefault()?.VehicleCount ?? 0;
+
+        // 4. Calculate congestion level (simple heuristic)
+        // The part of this will be optimized when we have background timmer 
+        int remainingSeconds = 30;
+
+        // 5. Mapping DTO and return for client
+        return new DashboardDataDto
+        {
+            IntersectionId = intersectionId,
+            IntersectionName = intersection.Name,
+            CurrentLightState = mainLight.CurrentState,
+            CurrentVehicleCount = currentCount,
+            RemainingSeconds = remainingSeconds,
+            RecentTraffic = recentTraffic.Select(t => new TrafficHistoryDto(
+                t.IntersectionId,
+                t.Direction,
+                t.VehicleCount,
+                t.Timestamp
+            ))
+        };
     }
 
     public async Task ManualOverrideAsync(Guid intersectionId, Direction direction, LightState forcedState)
