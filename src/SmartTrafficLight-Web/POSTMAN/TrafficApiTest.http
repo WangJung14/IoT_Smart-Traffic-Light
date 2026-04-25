@@ -1,0 +1,93 @@
+﻿### ========================================================
+### 🚦 SMART TRAFFIC LIGHT API TEST DATA
+### ========================================================
+
+@baseUrl = http://localhost:5212/api/v1
+# Guid cố định (Lấy 1 cái ID ngã tư trong DB của bạn để test cho mượt)
+@intersectionId = 3fa85f64-5717-4562-b3fc-2c963f66afa6 
+
+
+### ========================================================
+### 1. TRAFFIC API (Camera YOLO)
+### ========================================================
+
+### 1.1 Gửi dữ liệu xe từ YOLO lên (POST)
+# Direction: 0 (North), 1 (East), 2 (South), 3 (West)
+POST {{baseUrl}}/traffic
+Content-Type: application/json
+
+{
+  "intersectionId": "{{intersectionId}}",
+  "direction": 0,
+  "vehicleCount": 24
+}
+
+###
+
+### 1.2 Gửi tiếp dữ liệu kẹt xe nặng (POST)
+POST {{baseUrl}}/traffic
+Content-Type: application/json
+
+{
+  "intersectionId": "{{intersectionId}}",
+  "direction": 0,
+  "vehicleCount": 55
+}
+
+###
+
+### 1.3 Lấy số lượng xe hiện tại (GET)
+GET {{baseUrl}}/traffic/current?intersectionId={{intersectionId}}&direction=0
+
+###
+
+### 1.4 Lấy lịch sử giao thông 30 phút qua (GET)
+GET {{baseUrl}}/traffic/history?intersectionId={{intersectionId}}&minutes=30
+
+
+### ========================================================
+### 2. LIGHT CONTROL API (Admin Can thiệp thủ công) 
+### (Chuẩn bị cho Task 5.2)
+### ========================================================
+
+### 2.1 Ép đèn sang ĐỎ (POST)
+# LightState: 0 (Green), 1 (Yellow), 2 (Red)
+POST {{baseUrl}}/lights/override
+Content-Type: application/json
+
+{
+  "intersectionId": "{{intersectionId}}",
+  "direction": 0,
+  "forcedState": 2
+}
+
+###
+
+### 2.2 Ép đèn sang XANH (POST)
+POST {{baseUrl}}/lights/override
+Content-Type: application/json
+
+{
+  "intersectionId": "{{intersectionId}}",
+  "direction": 0,
+  "forcedState": 0
+}
+
+
+### ========================================================
+### 3. PREDICTION API (Não bộ AI)
+### (Chuẩn bị cho Task 5.3)
+### ========================================================
+
+### 3.1 Hỏi AI gợi ý thời gian đèn (GET)
+# Truyền 45 xe để test Rule "HeavyTraffic" (Kẹt xe)
+GET {{baseUrl}}/prediction/timing?currentVehicleCount=45&timeOfDay=2026-04-26T08:00:00Z
+
+
+### ========================================================
+### 4. ADMIN DASHBOARD API (Tổng hợp)
+### (Chuẩn bị cho Task 5.4)
+### ========================================================
+
+### 4.1 Lấy toàn bộ dữ liệu cho màn hình Admin (GET)
+GET {{baseUrl}}/admin/dashboard/{{intersectionId}}
