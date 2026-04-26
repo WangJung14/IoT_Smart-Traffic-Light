@@ -1,4 +1,4 @@
-﻿### ========================================================
+### ========================================================
 ### 🚦 SMART TRAFFIC LIGHT API TEST DATA
 ### ========================================================
 
@@ -91,3 +91,13 @@ GET {{baseUrl}}/prediction/timing?currentVehicleCount=45&timeOfDay=2026-04-26T08
 
 ### 4.1 Lấy toàn bộ dữ liệu cho màn hình Admin (GET)
 GET {{baseUrl}}/admin/dashboard/{{intersectionId}}
+
+### ========================================================
+### 5. SYSTEM & HEALTH CHECK API
+### ========================================================
+
+### 5.1 Test API (HelloController)
+GET {{baseUrl}}/MeoMeo
+
+### 5.2 Kiểm tra kết nối Database
+GET http://localhost:5212/api/health/db
