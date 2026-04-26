@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartTrafficLight.Application.Interfaces;
 using SmartTrafficLight.Application.Services;
 using SmartTrafficLight_Application.Services;
 using SmartTrafficLight_Infrastructure.Data;
+using SmartTrafficLight_Domain.Interfaces;
+using SmartTrafficLight_Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,9 +25,9 @@ builder.Services.AddControllers(options =>
 });
 
 // ===================== Dependency Injection =====================
-//builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
-//builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
-//builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
+builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
+builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
+builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
 
 // ===================== Database =====================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")

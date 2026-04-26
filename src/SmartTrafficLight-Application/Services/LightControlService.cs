@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using SmartTrafficLight.Application.DTOs;
 using SmartTrafficLight.Application.Interfaces;
 using SmartTrafficLight.Domain.Enums;
@@ -19,11 +19,13 @@ public class LightControlService : ILightControlService
     public LightControlService(
         ITrafficLightRepository lightRepo,
         ITrafficDataRepository dataRepo,
+        IIntersectionRepository intersectionRepo,
         ILogger<LightControlService> logger
     )
     {
         _lightRepo = lightRepo;
         _dataRepo = dataRepo;
+        _intersectionRepo = intersectionRepo;
         _logger = logger;
     }
 
