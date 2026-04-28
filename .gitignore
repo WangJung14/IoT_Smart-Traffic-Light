@@ -62,7 +62,7 @@ __pycache__/
 *.pyo
 .Python
 env/
-venv/
+camera_yolo/venv/
 .venv/
 *.egg-info/
 dist/
@@ -90,4 +90,6 @@ publish/
 out/
 
 TASKS.MD
+/fe
+seed.sql
 docker-compose.yml
