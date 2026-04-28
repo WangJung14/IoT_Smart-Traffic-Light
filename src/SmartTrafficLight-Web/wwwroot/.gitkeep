@@ -1,0 +1,1 @@
+// This file ensures the wwwroot directory is tracked by git and exists so ASP.NET Core can serve static files.
