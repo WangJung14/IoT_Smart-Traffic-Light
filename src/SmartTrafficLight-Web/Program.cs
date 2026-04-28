@@ -24,6 +24,17 @@ builder.Services.AddControllers(options =>
     options.Conventions.Add(new RoutePrefixConvention("api/v1"));
 });
 
+// Enable CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // ===================== Dependency Injection =====================
 builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
 builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
@@ -51,6 +62,8 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 
