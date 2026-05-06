@@ -7,6 +7,8 @@ using SmartTrafficLight_Infrastructure.Data;
 using SmartTrafficLight_Domain.Interfaces;
 using SmartTrafficLight_Infrastructure.Persistence;
 using SmartTrafficLight_Infrastructure.Background;
+using SmartTrafficLight_Web.Hubs;
+using SmartTrafficLight_Web.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===================== Services =====================
@@ -17,6 +19,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITrafficDetectionService, TrafficDetectionService>();
 builder.Services.AddScoped<IMLPredictionService, MLPredictionService>();
 builder.Services.AddScoped<ILightControlService,LightControlService>();
+builder.Services.AddScoped<ITrafficNotificationService, TrafficNotificationService>();
+
+builder.Services.AddSignalR();
 
 // Config API Route Prefix
 builder.Services.AddControllers(options =>
@@ -29,9 +34,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:3000", "http://127.0.0.1:5500", "http://localhost:5500")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -71,6 +77,7 @@ app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
 app.MapControllers();
+app.MapHub<TrafficHub>("/hubs/traffic");
 
 // ===================== Health Check Endpoint =====================
 app.MapGet("/api/health/db", async ([FromServices] AppDbContext dbContext) =>
