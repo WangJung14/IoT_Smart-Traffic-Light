@@ -9,11 +9,16 @@ using SmartTrafficLight_Infrastructure.Persistence;
 using SmartTrafficLight_Infrastructure.Background;
 using SmartTrafficLight_Web.Hubs;
 using SmartTrafficLight_Web.Services;
+using MudBlazor.Services;
+using SmartTrafficLight_Web.Components;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // ===================== Services =====================
 
 builder.Services.AddControllers();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddMudServices();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITrafficDetectionService, TrafficDetectionService>();
@@ -75,9 +80,12 @@ app.UseSwaggerUI();
 app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseAntiforgery();
 
 app.MapControllers();
 app.MapHub<TrafficHub>("/hubs/traffic");
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // ===================== Health Check Endpoint =====================
 app.MapGet("/api/health/db", async ([FromServices] AppDbContext dbContext) =>
