@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SmartTrafficLight.Application.Interfaces;
+using SmartTrafficLight.Application.DTOs;
 using SmartTrafficLight.Domain.Enums;
 using SmartTrafficLight_Domain.Interfaces;
 
@@ -34,6 +35,7 @@ namespace SmartTrafficLight_Infrastructure.Background
                     var detectionService = scope.ServiceProvider.GetRequiredService<ITrafficDetectionService>();
                     var mlService = scope.ServiceProvider.GetRequiredService<IMLPredictionService>();
                     var lightControlService = scope.ServiceProvider.GetRequiredService<ILightControlService>();
+                    var notificationService = scope.ServiceProvider.GetRequiredService<ITrafficNotificationService>();
 
                     // Bước 1: Lấy các giao lộ (Intersection)
                     var intersections = await intersectionRepo.GetAllAsync();
@@ -43,6 +45,17 @@ namespace SmartTrafficLight_Infrastructure.Background
                         // Lấy dữ liệu Vehicle Count mới nhất do YOLO bắn lên
                         int vehicleCount = await detectionService.GetCurrentTrafficAsync(intersection.Id, Direction.NORTH);
 
+                        // Broadcast lưu lượng xe qua SignalR
+                        try
+                        {
+                            var trafficPayload = new TrafficUpdatePayload(Direction.NORTH, vehicleCount);
+                            await notificationService.SendTrafficUpdateAsync(trafficPayload);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Lỗi khi broadcast TrafficUpdatePayload");
+                        }
+
                         // Bước 2: Gọi ML để dự đoán
                         var timingConfig = await mlService.PredictTimingAsync(vehicleCount, DateTime.UtcNow);
                         
@@ -51,6 +64,17 @@ namespace SmartTrafficLight_Infrastructure.Background
                         // Bước 3: Cập nhật trạng thái đèn vào DB hoặc gọi UI Update (Giả lập chuyển sang Xanh)
                         // Trong thực tế sẽ cần logic State Machine để đổi đèn an toàn.
                         // await lightControlService.SetLightStateAsync(intersection.Id, Direction.NORTH, LightState.GREEN);
+                        
+                        // Broadcast trạng thái đèn qua SignalR
+                        try
+                        {
+                            var lightPayload = new LightStatePayload(intersection.Id, LightState.GREEN);
+                            await notificationService.SendLightStateAsync(lightPayload);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Lỗi khi broadcast LightStatePayload");
+                        }
                     }
                 }
                 catch (Exception ex)
