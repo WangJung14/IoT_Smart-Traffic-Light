@@ -6,7 +6,7 @@ using SmartTrafficLight_Application.Services;
 using SmartTrafficLight_Infrastructure.Data;
 using SmartTrafficLight_Domain.Interfaces;
 using SmartTrafficLight_Infrastructure.Persistence;
-
+using SmartTrafficLight_Infrastructure.Background;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===================== Services =====================
@@ -39,6 +39,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
 builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
 builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
+
+// ===================== Background Service =====================
+builder.Services.AddHostedService<TrafficProcessingService>();
 
 // ===================== Database =====================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
