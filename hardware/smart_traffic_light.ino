@@ -1,5 +1,5 @@
-const unsigned int RED_DURATION    = 50;
-const unsigned int GREEN_DURATION  = 35;
+unsigned int RED_DURATION    = 50; // Used for EW Green
+unsigned int GREEN_DURATION  = 35; // Used for NS Green
 const unsigned int YELLOW_DURATION =  5;
 
 // Chân đèn: (Đỏ, Vàng, Xanh)
@@ -84,10 +84,33 @@ void on2(int p1, int p2) { digitalWrite(p1,HIGH); digitalWrite(p2,HIGH); }
 
 void handleSerial() {
   if (!Serial.available()) return;
-  char cmd = Serial.read();
-  if      (cmd=='S'||cmd=='s') printStatus();
-  else if (cmd=='R'||cmd=='r') { Serial.println(F(">> Reset...")); enterState(NS_GREEN_EW_RED); }
-  else Serial.println(F("? S=Status R=Reset"));
+  String input = Serial.readStringUntil('\n');
+  input.trim();
+  if (input.length() == 0) return;
+
+  if (input.equalsIgnoreCase("S")) {
+    printStatus();
+  } else if (input.equalsIgnoreCase("R")) {
+    Serial.println(F(">> Reset...")); 
+    enterState(NS_GREEN_EW_RED);
+  } else if (input.startsWith("T:")) {
+    // Format: T:ns_green,ew_green
+    int commaIndex = input.indexOf(',');
+    if (commaIndex > 2) {
+      int newNs = input.substring(2, commaIndex).toInt();
+      int newEw = input.substring(commaIndex + 1).toInt();
+      if (newNs > 0 && newEw > 0) {
+        GREEN_DURATION = newNs;
+        RED_DURATION = newEw; // RED_DURATION acts as EW Green in this logic
+        Serial.print(F(">> OK! NS_GREEN=")); Serial.print(GREEN_DURATION);
+        Serial.print(F("s, EW_GREEN=")); Serial.print(RED_DURATION); Serial.println(F("s"));
+      } else {
+        Serial.println(F(">> Error: Invalid time values"));
+      }
+    }
+  } else {
+    Serial.println(F("? Commands: T:ns,ew | S=Status | R=Reset"));
+  }
 }
 
 void printStatus() {
