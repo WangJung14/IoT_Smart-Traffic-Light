@@ -4,4 +4,4 @@ namespace SmartTrafficLight.Application.DTOs;
 
 public record TrafficUpdatePayload(Direction Direction, int VehicleCount);
 
-public record LightStatePayload(Guid IntersectionId, LightState CurrentLightState);
+public record LightStatePayload(Guid IntersectionId, Direction Direction, LightState CurrentLightState);

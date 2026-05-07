@@ -51,7 +51,7 @@ public class TrafficNotificationServiceTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        var payload = new LightStatePayload(id, LightState.GREEN);
+        var payload = new LightStatePayload(id, Direction.NORTH, LightState.GREEN);
 
         // Act
         await _service.SendLightStateAsync(payload);
