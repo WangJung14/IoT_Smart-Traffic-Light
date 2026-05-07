@@ -68,7 +68,7 @@ namespace SmartTrafficLight_Infrastructure.Background
                         // Broadcast trạng thái đèn qua SignalR
                         try
                         {
-                            var lightPayload = new LightStatePayload(intersection.Id, LightState.GREEN);
+                            var lightPayload = new LightStatePayload(intersection.Id, Direction.NORTH, LightState.GREEN);
                             await notificationService.SendLightStateAsync(lightPayload);
                         }
                         catch (Exception ex)
@@ -76,6 +76,16 @@ namespace SmartTrafficLight_Infrastructure.Background
                             _logger.LogWarning(ex, "Lỗi khi broadcast LightStatePayload");
                         }
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Ignore expected cancellation during shutdown
+                    break;
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Ignore disposed services during shutdown
+                    break;
                 }
                 catch (Exception ex)
                 {

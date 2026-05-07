@@ -57,9 +57,10 @@ public class DtoTests
     public void LightStatePayload_ShouldStoreValues()
     {
         var id = Guid.NewGuid();
-        var payload = new LightStatePayload(id, LightState.GREEN);
+        var payload = new LightStatePayload(id, Direction.NORTH, LightState.GREEN);
 
         Assert.Equal(id, payload.IntersectionId);
+        Assert.Equal(Direction.NORTH, payload.Direction);
         Assert.Equal(LightState.GREEN, payload.CurrentLightState);
     }
 
