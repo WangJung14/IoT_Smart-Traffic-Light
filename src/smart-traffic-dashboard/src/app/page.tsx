@@ -31,6 +31,16 @@ interface TrafficState {
   vehicleCount: number;
 }
 
+interface WebsterState {
+  cycleTime: number;
+  greenNS: number;
+  greenEW: number;
+  totalFlowRatio: number;
+  status: string;
+  pcuNS: number;
+  pcuEW: number;
+}
+
 interface LogEntry {
   time: string;
   msg: string;
@@ -46,6 +56,16 @@ const DEFAULT_STATE: Record<Direction, TrafficState> = {
   SOUTH: { currentLightState: "RED", countdownSeconds: 0, vehicleCount: 0 },
   EAST: { currentLightState: "RED", countdownSeconds: 0, vehicleCount: 0 },
   WEST: { currentLightState: "RED", countdownSeconds: 0, vehicleCount: 0 },
+};
+
+const DEFAULT_WEBSTER: WebsterState = {
+  cycleTime: 0,
+  greenNS: 0,
+  greenEW: 0,
+  totalFlowRatio: 0,
+  status: "WAITING",
+  pcuNS: 0,
+  pcuEW: 0,
 };
 
 function parseArduinoMessage(msg: string): { nsState: LightState; ewState: LightState; seconds: number } | null {
@@ -80,6 +100,7 @@ function parseArduinoMessage(msg: string): { nsState: LightState; ewState: Light
 
 export default function Dashboard() {
   const [states, setStates] = useState(DEFAULT_STATE);
+  const [webster, setWebster] = useState<WebsterState>(DEFAULT_WEBSTER);
   const [connectionStatus, setConnectionStatus] = useState<"CONNECTED" | "DISCONNECTED" | "RECONNECTING" | "ERROR">("DISCONNECTED");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [trafficHistory, setTrafficHistory] = useState<{ time: string; ns: string; ew: string; sec: number }[]>([]);
@@ -113,6 +134,11 @@ export default function Dashboard() {
     connection.onclose(() => {
       setConnectionStatus("DISCONNECTED");
       addLog("Mất kết nối SignalR", "error");
+    });
+
+    connection.on("ReceiveWebsterUpdate", (payload: WebsterState) => {
+      setWebster(payload);
+      addLog(`AI Timing: Co=${payload.cycleTime}s (NS:${payload.greenNS}s, EW:${payload.greenEW}s)`, "info");
     });
 
     connection.on("ReceiveHardwareStatus", (payload: Record<string, unknown>) => {
@@ -454,7 +480,72 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ===== ROW 3: System Activity Logs ===== */}
+        {/* ===== ROW 3: AI Timing Analysis (Webster) ===== */}
+        <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/5">
+          <div className="px-5 py-3 border-b border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap size={16} className="text-blue-400" />
+              <span className="text-sm font-semibold text-slate-200 tracking-wider">AI TIMING ANALYSIS (WEBSTER)</span>
+            </div>
+            <div className={`text-[10px] font-bold px-2 py-0.5 rounded border ${webster.status === "OVERLOADED" ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"}`}>
+              {webster.status}
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Cycle Info */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Optimal Cycle (Co)</span>
+                <div className="text-3xl font-black text-white font-mono">{webster.cycleTime}s</div>
+                <div className="h-1.5 w-full bg-slate-800 rounded-full mt-2 overflow-hidden">
+                  <div className="h-full bg-blue-500" style={{ width: `${(webster.cycleTime / 120) * 100}%` }}></div>
+                </div>
+              </div>
+
+              {/* Green Split */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Green Split (NS : EW)</span>
+                <div className="text-2xl font-black text-slate-200 font-mono">
+                  <span className="text-emerald-400">{webster.greenNS}s</span>
+                  <span className="text-slate-600 mx-2">:</span>
+                  <span className="text-cyan-400">{webster.greenEW}s</span>
+                </div>
+                <div className="flex h-1.5 w-full bg-slate-800 rounded-full mt-2 overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: `${(webster.greenNS / (webster.greenNS + webster.greenEW || 1)) * 100}%` }}></div>
+                  <div className="h-full bg-cyan-500" style={{ width: `${(webster.greenEW / (webster.greenNS + webster.greenEW || 1)) * 100}%` }}></div>
+                </div>
+              </div>
+
+              {/* Flow Density */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Traffic Density (PCU/h)</span>
+                <div className="flex items-center gap-4">
+                  <div>
+                    <div className="text-[10px] text-slate-600">NS</div>
+                    <div className="text-lg font-bold text-slate-300">{webster.pcuNS.toLocaleString()}</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/5"></div>
+                  <div>
+                    <div className="text-[10px] text-slate-600">EW</div>
+                    <div className="text-lg font-bold text-slate-300">{webster.pcuEW.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Saturation */}
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Flow Ratio (Y)</span>
+                <div className="text-3xl font-black font-mono" style={{ color: webster.totalFlowRatio >= 1.0 ? "#ef4444" : "#a855f7" }}>
+                  {webster.totalFlowRatio.toFixed(2)}
+                </div>
+                <div className="text-[9px] text-slate-600">Saturation Threshold: 1.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ===== ROW 4: System Activity Logs ===== */}
         <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden">
           <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
             <AlertTriangle size={16} className="text-amber-400" />
