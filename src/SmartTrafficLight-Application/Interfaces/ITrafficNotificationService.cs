@@ -7,4 +7,5 @@ public interface ITrafficNotificationService
     Task SendTrafficUpdateAsync(TrafficUpdatePayload payload);
     Task SendLightStateAsync(LightStatePayload payload);
     Task SendHardwareStatusAsync(HardwareStatusPayload payload);
+    Task SendWebsterUpdateAsync(WebsterUpdatePayload payload);
 }

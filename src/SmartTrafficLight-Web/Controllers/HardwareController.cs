@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SmartTrafficLight.Application.DTOs;
 using SmartTrafficLight.Application.Interfaces;
 
 namespace SmartTrafficLight_Web.Controllers
@@ -8,11 +9,64 @@ namespace SmartTrafficLight_Web.Controllers
     public class HardwareController : ControllerBase
     {
         private readonly IArduinoSerialService _arduinoService;
+        private readonly IWebsterTimingService _websterService;
+        private readonly ITrafficNotificationService _notificationService;
 
-        public HardwareController(IArduinoSerialService arduinoService)
+        public HardwareController(IArduinoSerialService arduinoService, 
+                                  IWebsterTimingService websterService,
+                                  ITrafficNotificationService notificationService)
         {
             _arduinoService = arduinoService;
+            _websterService = websterService;
+            _notificationService = notificationService;
         }
+
+        /// <summary>
+        /// POST: Receive vehicle counts from YOLO and calculate optimal timing via Webster
+        /// URL: POST /api/v1/hardware/vehicle-counts
+        /// </summary>
+        [HttpPost("vehicle-counts")]
+        public async Task<IActionResult> ReceiveVehicleCounts([FromBody] VehicleCountRequest request)
+        {
+            if (request.NsVehicles == null || request.EwVehicles == null)
+            {
+                return BadRequest(new { error = "Vehicle counts for both directions are required" });
+            }
+
+            // 1. Calculate optimal timing using Webster method
+            var result = _websterService.Calculate(request.NsVehicles, request.EwVehicles);
+
+            // 2. Send updated timing to Arduino
+            _arduinoService.SendTimingUpdate(result.GreenNS, result.GreenEW);
+
+            // 3. Notify Dashboard via SignalR
+            await _notificationService.SendWebsterUpdateAsync(new WebsterUpdatePayload
+            {
+                CycleTime = result.CycleTime,
+                GreenNS = result.GreenNS,
+                GreenEW = result.GreenEW,
+                TotalFlowRatio = result.TotalFlowRatio,
+                Status = result.Status,
+                PcuNS = result.PcuNS,
+                PcuEW = result.PcuEW
+            });
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// GET: Get the latest Webster calculation result
+        /// URL: GET /api/v1/hardware/webster-result
+        /// </summary>
+        [HttpGet("webster-result")]
+        public IActionResult GetWebsterResult()
+        {
+            var result = _websterService.GetLastResult();
+            if (result == null) return NotFound(new { message = "No Webster calculation has been performed yet" });
+            return Ok(result);
+        }
+
+        public record VehicleCountRequest(VehicleCounts NsVehicles, VehicleCounts EwVehicles);
 
         /// <summary>
         /// GET: Get the latest status from Arduino

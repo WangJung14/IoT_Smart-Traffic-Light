@@ -23,6 +23,7 @@ builder.Services.AddScoped<IMLPredictionService, MLPredictionService>();
 builder.Services.AddScoped<ILightControlService,LightControlService>();
 builder.Services.AddScoped<ITrafficNotificationService, TrafficNotificationService>();
 builder.Services.AddSingleton<IArduinoSerialService, ArduinoSerialService>();
+builder.Services.AddSingleton<IWebsterTimingService, WebsterTimingService>();
 
 builder.Services.AddSignalR();
 

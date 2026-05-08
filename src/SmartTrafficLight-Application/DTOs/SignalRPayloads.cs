@@ -40,3 +40,14 @@ public class HardwareStatusPayload
         StatusMessage = statusMessage;
     }
 }
+
+public class WebsterUpdatePayload
+{
+    public int CycleTime { get; set; }
+    public int GreenNS { get; set; }
+    public int GreenEW { get; set; }
+    public double TotalFlowRatio { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public double PcuNS { get; set; }
+    public double PcuEW { get; set; }
+}
