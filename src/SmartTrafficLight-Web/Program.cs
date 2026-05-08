@@ -9,8 +9,6 @@ using SmartTrafficLight_Infrastructure.Persistence;
 using SmartTrafficLight_Infrastructure.Background;
 using SmartTrafficLight_Web.Hubs;
 using SmartTrafficLight_Web.Services;
-using MudBlazor.Services;
-using SmartTrafficLight_Web.Components;
 using SmartTrafficLight.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,8 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 // ===================== Services =====================
 
 builder.Services.AddControllers();
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddMudServices();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ITrafficDetectionService, TrafficDetectionService>();
@@ -54,7 +50,7 @@ builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
 builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
 
 // ===================== Background Service =====================
-builder.Services.AddHostedService<TrafficProcessingService>();
+// builder.Services.AddHostedService<TrafficProcessingService>();
 
 // ===================== Database =====================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -74,6 +70,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
+// Khởi tạo ArduinoSerialService ngay lập tức để mở kết nối COM2
+app.Services.GetRequiredService<IArduinoSerialService>();
+
 // ===================== Middleware =====================
 
 app.UseSwagger();
@@ -82,12 +81,9 @@ app.UseSwaggerUI();
 app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseAntiforgery();
 
 app.MapControllers();
 app.MapHub<TrafficHub>("/hubs/traffic");
-app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // ===================== Health Check Endpoint =====================
 app.MapGet("/api/health/db", async ([FromServices] AppDbContext dbContext) =>

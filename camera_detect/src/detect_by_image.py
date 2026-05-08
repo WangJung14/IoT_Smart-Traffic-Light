@@ -35,7 +35,7 @@ def main():
 
     # Combine frames
     combined = np.hstack((img_left, img_right))
-    
+
     # Detect -> Count -> Draw
     detections = detect_vehicles(model, combined)
     count_a, count_b = count_by_axis(detections)

@@ -93,3 +93,6 @@ TASKS.MD
 /fe
 seed.sql
 docker-compose.yml
+src/SmartTrafficLight-Web/wwwroot/videos
+HOW_TO_RUN.md
+logic_traffic_light.md

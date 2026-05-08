@@ -108,6 +108,15 @@ void handleSerial() {
         Serial.println(F(">> Error: Invalid time values"));
       }
     }
+  } else if (input.startsWith("F:")) {
+    // Admin force state: F:0 = NS_GREEN, F:1 = NS_YELLOW, F:2 = EW_GREEN, F:3 = EW_YELLOW
+    int newState = input.substring(2).toInt();
+    if (newState >= 0 && newState <= 3) {
+      Serial.print(F(">> ADMIN FORCE STATE: ")); Serial.println(newState);
+      enterState((TrafficState)newState);
+    } else {
+      Serial.println(F(">> Error: F:0-3 only"));
+    }
   } else {
     Serial.println(F("? Commands: T:ns,ew | S=Status | R=Reset"));
   }
