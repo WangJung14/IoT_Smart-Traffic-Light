@@ -43,6 +43,19 @@ def count_by_axis(detections: list) -> tuple:
             count_b += 1
     return count_a, count_b
 
+def count_by_axis_detailed(detections: list) -> tuple:
+    """Count vehicles per axis, broken down by type."""
+    axis_a = {"car": 0, "motorbike": 0, "bus": 0, "truck": 0}
+    axis_b = {"car": 0, "motorbike": 0, "bus": 0, "truck": 0}
+    for (x1, y1, x2, y2, cls_id, conf) in detections:
+        cx = (x1 + x2) / 2
+        vtype = VEHICLE_CLASSES[cls_id]
+        if cx < DIVIDER_X:
+            axis_a[vtype] += 1
+        else:
+            axis_b[vtype] += 1
+    return axis_a, axis_b
+
 # ==================== DRAWING ====================
 def draw_overlay(frame: np.ndarray, detections: list, count_a: int, count_b: int) -> np.ndarray:
     """Draw bounding boxes, divider, and counts."""
