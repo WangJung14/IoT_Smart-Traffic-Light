@@ -11,6 +11,7 @@ using SmartTrafficLight_Web.Hubs;
 using SmartTrafficLight_Web.Services;
 using MudBlazor.Services;
 using SmartTrafficLight_Web.Components;
+using SmartTrafficLight.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddScoped<ITrafficDetectionService, TrafficDetectionService>();
 builder.Services.AddScoped<IMLPredictionService, MLPredictionService>();
 builder.Services.AddScoped<ILightControlService,LightControlService>();
 builder.Services.AddScoped<ITrafficNotificationService, TrafficNotificationService>();
+builder.Services.AddSingleton<IArduinoSerialService, ArduinoSerialService>();
 
 builder.Services.AddSignalR();
 
