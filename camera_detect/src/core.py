@@ -43,11 +43,30 @@ def count_by_axis(detections: list) -> tuple:
             count_b += 1
     return count_a, count_b
 
-def count_by_axis_detailed(detections: list) -> tuple:
-    """Count vehicles per axis, broken down by type."""
+def count_by_axis_detailed(input_data) -> tuple:
+    """Count vehicles per axis, broken down by type.
+       Handles both YOLO Results object and raw list of detections."""
     axis_a = {"car": 0, "motorbike": 0, "bus": 0, "truck": 0}
     axis_b = {"car": 0, "motorbike": 0, "bus": 0, "truck": 0}
-    for (x1, y1, x2, y2, cls_id, conf) in detections:
+    
+    detections = []
+    # Case 1: Results object from ultralytics
+    if hasattr(input_data, 'boxes') and input_data.boxes is not None:
+        raw_data = input_data.boxes.data.tolist()
+        for det in raw_data:
+            if len(det) < 6: continue
+            x1, y1, x2, y2, conf, cls_id = det[:6]
+            detections.append((x1, y1, x2, y2, int(cls_id), conf))
+    # Case 2: Raw list of detections (x1, y1, x2, y2, cls_id, conf)
+    elif isinstance(input_data, list):
+        detections = input_data
+
+    for det in detections:
+        if len(det) < 5: continue
+        x1, y1, x2, y2, cls_id = det[:5]
+        
+        if cls_id not in VEHICLE_CLASSES: continue
+        
         cx = (x1 + x2) / 2
         vtype = VEHICLE_CLASSES[cls_id]
         if cx < DIVIDER_X:
