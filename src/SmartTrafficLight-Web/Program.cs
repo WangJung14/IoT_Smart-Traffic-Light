@@ -49,6 +49,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IIntersectionRepository, IntersectionRepository>();
 builder.Services.AddScoped<ITrafficLightRepository, TrafficLightRepository>();
 builder.Services.AddScoped<ITrafficDataRepository, TrafficDataRepository>();
+builder.Services.AddScoped<IDetectionLogRepository, DetectionLogRepository>();
 
 // ===================== Background Service =====================
 // builder.Services.AddHostedService<TrafficProcessingService>();
