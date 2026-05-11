@@ -177,17 +177,27 @@ export default function Dashboard() {
     const startConnection = async () => {
       try {
         await connection.start();
+        // Guard: if component unmounted while we were connecting, stop immediately
+        if (!isMounted) {
+          connection.stop();
+          return;
+        }
         setConnectionStatus("CONNECTED");
         addLog("Kết nối SignalR thành công!", "success");
       } catch (err: unknown) {
+        if (!isMounted) return; // Component unmounted, ignore error
         setConnectionStatus("ERROR");
         const message = err instanceof Error ? err.message : "Unknown error";
         addLog(`Lỗi kết nối: ${message}`, "error");
       }
     };
 
+    let isMounted = true;
     startConnection();
-    return () => { connection.stop(); };
+    return () => {
+      isMounted = false;
+      connection.stop();
+    };
   }, []);
 
   const getLightColor = (state: LightState): string => {
