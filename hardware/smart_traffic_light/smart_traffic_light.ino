@@ -148,14 +148,34 @@ void handleSerial() {
     Serial.print(F(">> MODE SET TO: ")); 
     Serial.println(isInfiniteMode ? F("INFINITE") : F("AUTO"));
   } else if (input.startsWith("J:")) {
-    // Jump to state safely (through yellow)
+    // Jump to target GREEN state safely (through yellow).
+    // Instead of waiting for current phase to expire, IMMEDIATELY
+    // enter the yellow phase of the current direction so the
+    // transition takes only YELLOW_DURATION (5s), not the remaining
+    // green time (up to 50s).
     int t = input.substring(2).toInt();
-    if (t == 0 || t == 2) { // Usually we only jump to Green states safely
-      targetState = t;
-      Serial.print(F(">> JUMP REQUEST TO STATE: ")); Serial.println(targetState);
-      // The loop() will take care of transitioning automatically now
+    if (t == 0 || t == 2) {
+      // Only act if we are not already in (or heading to) the target
+      if (currentState != (TrafficState)t) {
+        targetState = t;
+        Serial.print(F("> JUMP REQUEST TO STATE: ")); Serial.println(targetState);
+
+        // Immediately cut to the yellow of whichever direction is
+        // currently green, so we only wait YELLOW_DURATION before
+        // arriving at the requested state.
+        if (currentState == NS_GREEN_EW_RED) {
+          // NS is green -> go to NS yellow first, then EW green
+          enterState(NS_YELLOW_EW_RED);
+        } else if (currentState == NS_RED_EW_GREEN) {
+          // EW is green -> go to EW yellow first, then NS green
+          enterState(NS_RED_EW_YELLOW);
+        }
+        // If already in a yellow state the loop() will handle it
+      } else {
+        Serial.println(F("> Already at target state"));
+      }
     } else {
-      Serial.println(F(">> Error: J:0 (NS Green) or J:2 (EW Green) only"));
+      Serial.println(F("> Error: J:0 (NS Green) or J:2 (EW Green) only"));
     }
   } else {
     Serial.println(F("? Commands: T:ns,ew | S=Status | R=Reset | M:0/1 | F:0-3 | J:0/2"));
