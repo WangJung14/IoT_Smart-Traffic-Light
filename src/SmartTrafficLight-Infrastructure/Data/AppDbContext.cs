@@ -16,10 +16,11 @@ public class AppDbContext : DbContext
     }
 
     //Dbset table in database
-    public DbSet<Intersection> Intersections => Set<Intersection>();
-    public DbSet<TrafficLight> TrafficLights => Set<TrafficLight>();
-    public DbSet<TrafficData> TrafficDatas => Set<TrafficData>();
+    public DbSet<Intersection>     Intersections    => Set<Intersection>();
+    public DbSet<TrafficLight>     TrafficLights    => Set<TrafficLight>();
+    public DbSet<TrafficData>      TrafficDatas     => Set<TrafficData>();
     public DbSet<PredictionResult> PredictionResults => Set<PredictionResult>();
+    public DbSet<DetectionLog>     DetectionLogs    => Set<DetectionLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

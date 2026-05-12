@@ -23,4 +23,14 @@ public class TrafficNotificationService : ITrafficNotificationService
     {
         await _hubContext.Clients.All.SendAsync("ReceiveTrafficUpdate", payload);
     }
+
+    public async Task SendHardwareStatusAsync(HardwareStatusPayload payload)
+    {
+        await _hubContext.Clients.All.SendAsync("ReceiveHardwareStatus", payload);
+    }
+
+    public async Task SendWebsterUpdateAsync(WebsterUpdatePayload payload)
+    {
+        await _hubContext.Clients.All.SendAsync("ReceiveWebsterUpdate", payload);
+    }
 }

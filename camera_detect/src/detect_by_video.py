@@ -1,14 +1,33 @@
 import cv2
 import numpy as np
 import time
+import requests
 from ultralytics import YOLO
 
 # Import shared logic and configuration
 from core import (FRAME_W, FRAME_H, REPORT_INTERVAL, 
-                  detect_vehicles, count_by_axis, draw_overlay, report_to_console)
+                  detect_vehicles, count_by_axis, count_by_axis_detailed, 
+                  draw_overlay, report_to_console)
 
+BACKEND_API_URL = "http://localhost:5212/api/v1/hardware/vehicle-counts"
 DEFAULT_LEFT = "data/videos/heavy_traffic.mp4"
 DEFAULT_RIGHT = "data/videos/low_traffic.mp4"
+
+def send_to_backend(ns_vehicles, ew_vehicles):
+    """POST vehicle counts to ASP.NET Core API"""
+    try:
+        payload = {
+            "nsVehicles": ns_vehicles,
+            "ewVehicles": ew_vehicles
+        }
+        res = requests.post(BACKEND_API_URL, json=payload, timeout=2)
+        if res.status_code == 200:
+            data = res.json()
+            print(f"[API] Updated Timing -> Co:{data['cycleTime']}s, g_NS:{data['greenNS']}s, g_EW:{data['greenEW']}s")
+        else:
+            print(f"[API ERROR] {res.status_code}: {res.text}")
+    except Exception as e:
+        print(f"[API ERROR] Connection failed: {e}")
 
 def load_video(path: str) -> cv2.VideoCapture:
     cap = cv2.VideoCapture(path)
@@ -54,7 +73,7 @@ def main():
     print("=" * 60)
 
     print("[INFO] Loading YOLOv8 model (yolov8x - EXTRA LARGE)...")
-    model = YOLO("yolov8x.pt")
+    model = YOLO("yolov8n.pt")
 
     cap_left = load_video(DEFAULT_LEFT)
     cap_right = load_video(DEFAULT_RIGHT)
@@ -80,7 +99,13 @@ def main():
         # Time-based reporting
         now = time.time()
         if now - last_report_time >= REPORT_INTERVAL:
+            # 1. Console report (raw totals)
             report_to_console(count_a, count_b)
+            
+            # 2. API report (detailed per type for Webster)
+            ns_detailed, ew_detailed = count_by_axis_detailed(detections)
+            send_to_backend(ns_detailed, ew_detailed)
+            
             last_report_time = now
 
         # Handle keyboard input
