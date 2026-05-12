@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import * as signalR from "@microsoft/signalr";
-import { Activity, Camera, AlertTriangle, ShieldCheck, BarChart3, Wifi, WifiOff, Zap, RotateCcw } from "lucide-react";
+import { Activity, Camera, AlertTriangle, ShieldCheck, BarChart3, Wifi, WifiOff, Zap, RotateCcw, Brain } from "lucide-react";
 
 const API_BASE = "http://localhost:5212/api/v1";
 
@@ -305,6 +306,13 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link
+              href="/forecast"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold tracking-wider border border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-all"
+            >
+              <Brain size={13} />
+              AI FORECAST
+            </Link>
             <button
               onClick={handleToggleInfiniteMode}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold tracking-wider border transition-all ${

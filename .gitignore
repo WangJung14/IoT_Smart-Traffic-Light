@@ -97,3 +97,17 @@ src/SmartTrafficLight-Web/wwwroot/videos
 HOW_TO_RUN.md
 logic_traffic_light.md
 DEMO_GUIDE.md
+
+## ===========================
+## Python / ML
+## ===========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pkl
+*.pth
+*.egg-info/
+.venv/
+venv/
+.env
+camera_detect/.env
