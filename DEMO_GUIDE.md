@@ -59,9 +59,23 @@ Hệ thống nay hỗ trợ chế độ Vô Tận, không sử dụng bộ đế
 
 ---
 
+### Bước 6: Demo AI Forecasting & Vehicle Stats (Phân tích nâng cao)
+Hệ thống nay đã tích hợp Dashboard phân tích dữ liệu lịch sử từ Database.
+1. Trên giao diện web, chọn tab **AI FORECAST**.
+2. **AI Forecast (Line Chart)**:
+   - Hệ thống hiển thị dự báo chu kỳ đèn (Cycle Time) trong 24 giờ tới dựa trên mô hình **Random Forest**.
+   - Di chuột vào biểu đồ để xem chi tiết thời gian dự kiến (sáng sớm vắng xe ~40s, giờ cao điểm ~120s).
+3. **Lượng xe theo giờ (Stacked Bar Chart)**:
+   - Chuyển sang tab **LƯỢNG XE THEO GIỜ**.
+   - Tại đây, bạn có thể lọc dữ liệu theo **Nguồn (Source)**: Video hoặc Simulation.
+   - Quan sát biểu đồ cột chồng (Stacked Bar) phân chia rõ rệt số lượng: Ô tô, Xe máy, Xe buýt, Xe tải.
+   - Hệ thống sẽ tự động tính toán trung bình theo khung giờ từ hàng nghìn bản ghi trong `DetectionLogs`.
+
+---
+
 ## 🔍 Cách kiểm tra "Liên kết đã thông chưa?"
 1. **YOLO đã gửi data chưa?**: Nhìn terminal Python, nếu thấy dòng `[API] Updated Timing -> Co:120s...` là YOLO đã liên kết thành công với Backend.
-2. **Backend đã gửi xuống Arduino chưa?**: Nhìn terminal Backend, nếu thấy `Sent timing update to Arduino: T:...` là liên kết Serial đã thông.
+2. **ML API đã chạy chưa?**: Truy cập `http://localhost:8000/predict`, nếu thấy JSON chứa 24 giờ dữ liệu là FastAPI đã thông.
 3. **Frontend đã nhận AI data chưa?**: Nếu bảng **AI TIMING ANALYSIS** trên web nhảy số theo video là SignalR đã thông.
 
 ---
