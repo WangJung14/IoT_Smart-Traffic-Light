@@ -35,12 +35,23 @@ Lúc này, hãy tập trung vào cửa sổ Python (YOLO) và dùng các phím n
 3. **Nhấn phím `1`**: Cả 2 hướng đều đông xe.
    - **Kết quả**: Chu kỳ sẽ đạt tối đa (120s), xanh chia đều cho cả 2 hướng để giải tỏa tối đa.
 
-### Bước 3: Demo Can thiệp thủ công (Admin Override)
-- Trên Dashboard, nhấn nút **"B-N → XANH"**.
-- **Kết quả**: Đèn Bắc-Nam lập tức chuyển Xanh bất kể AI đang tính toán gì. Đèn trong Proteus sẽ đổi theo.
-- Nhấn nút **RESET** để trả lại quyền điều khiển cho AI.
+### Bước 3: Demo Chế độ Vô Tận (Infinite Mode) & Admin Override
+Hệ thống nay hỗ trợ chế độ Vô Tận, không sử dụng bộ đếm ngược mà chỉ đổi màu khi có lệnh từ Admin hoặc AI.
+1. Trên Dashboard (Góc trên bên phải), nhấn nút **INFINITE: OFF** để chuyển sang **INFINITE: ON** (Phát sáng tím).
+2. **Kết quả**: Bộ đếm giây ở các hướng sẽ chuyển thành ký hiệu vô cực (`∞`). Đèn sẽ giữ nguyên trạng thái hiện tại mãi mãi.
+3. **Can thiệp thủ công (Admin Jump)**:
+   - Các nút **"ƯU TIÊN B-N"** và **"ƯU TIÊN Đ-T"** sẽ xuất hiện.
+   - Nhấn **ƯU TIÊN Đ-T** (khi B-N đang Xanh).
+   - **Kết quả**: Đèn B-N sẽ KHÔNG lập tức chuyển Đỏ gây nguy hiểm, mà sẽ tự động chuyển sang **VÀNG trong 5 giây**, sau đó mới nhảy sang Đ-T XANH. Đèn trong Proteus sẽ đổi theo.
 
-### Bước 4: Demo với Ảnh (Nếu không có video)
+### Bước 4: Demo AI Actuated (Tự Động Đổi Đèn Trong Chế Độ Vô Tận)
+1. Hãy đảm bảo đang ở chế độ **INFINITE: ON** và luồng Đông-Tây (Đ-T) đang **ĐỎ**.
+2. Trên màn hình Terminal của Python (YOLO), nhấn phím số `2` để giả lập lưu lượng xe đông (Heavy Traffic) ở hướng Đông-Tây (> 10 xe chờ đèn đỏ).
+3. **Kết quả**: Ngay khi Backend nhận được lượng xe > ngưỡng quy định, nó sẽ tự ra quyết định "Actuated" và đẩy lệnh `Jump` xuống Arduino.
+4. Đèn sẽ tự động chạy qua Vàng và nhường đường cho Đông-Tây mà không cần bạn bấm trên web!
+5. Nhấn nút **RESET** để trả lại hệ thống về chế độ Auto (Tắt Infinite) bình thường.
+
+### Bước 5: Demo với Ảnh (Nếu không có video)
 1. Bỏ 2 tấm ảnh vào thư mục `camera_detect/demo_data/`.
 2. Chạy `python src/detect_by_image.py`.
 3. Chương trình sẽ hiện kết quả nhận diện trên 2 ảnh và cập nhật giây ngay lập tức.

@@ -73,7 +73,7 @@ def main():
     print("=" * 60)
 
     print("[INFO] Loading YOLOv8 model (yolov8x - EXTRA LARGE)...")
-    model = YOLO("yolov8x.pt")
+    model = YOLO("yolov8n.pt")
 
     cap_left = load_video(DEFAULT_LEFT)
     cap_right = load_video(DEFAULT_RIGHT)

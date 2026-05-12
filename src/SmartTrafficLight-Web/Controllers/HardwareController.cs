@@ -10,6 +10,7 @@ namespace SmartTrafficLight_Web.Controllers
     [Route("hardware")]
     public class HardwareController : ControllerBase
     {
+        private static DateTime _lastJumpTime = DateTime.MinValue;
         private readonly IArduinoSerialService _arduinoService;
         private readonly IWebsterTimingService _websterService;
         private readonly ITrafficNotificationService _notificationService;
@@ -38,11 +39,40 @@ namespace SmartTrafficLight_Web.Controllers
             if (request.NsVehicles == null || request.EwVehicles == null)
                 return BadRequest(new { error = "Vehicle counts for both directions are required" });
 
-            // 1. Tính toán thời gian tối ưu bằng Webster
+            // 1. Check current mode
+            bool isInfinite = _arduinoService.IsInfiniteMode;
+
+            // 2. Tính toán thời gian tối ưu bằng Webster (vẫn tính để lưu log)
             var result = _websterService.Calculate(request.NsVehicles, request.EwVehicles);
 
-            // 2. Gửi lệnh xuống Arduino
-            _arduinoService.SendTimingUpdate(result.GreenNS, result.GreenEW);
+            if (isInfinite)
+            {
+                // AI Actuated Logic (Chỉ quyết định đổi đèn khi ở chế độ Vô Tận)
+                string currentStatus = _arduinoService.GetLatestStatus();
+                int threshold = 10; // Ngưỡng xe chờ để quyết định chuyển đèn
+                
+                // Tránh tình trạng AI đổi đèn liên tục nếu cả 2 bên đều đông xe (Cooldown 30 giây)
+                if ((DateTime.UtcNow - _lastJumpTime).TotalSeconds > 30)
+                {
+                    if (currentStatus.Contains("B-N:XANH") && request.EwVehicles.Total >= threshold)
+                    {
+                        // Hướng NS đang xanh, nhưng EW đang có nhiều xe chờ quá -> Chuyển sang EW Xanh
+                        _arduinoService.RequestJump(2); 
+                        _lastJumpTime = DateTime.UtcNow;
+                    }
+                    else if (currentStatus.Contains("D-T:XANH") && request.NsVehicles.Total >= threshold)
+                    {
+                        // Hướng EW đang xanh, nhưng NS đang có nhiều xe chờ quá -> Chuyển sang NS Xanh
+                        _arduinoService.RequestJump(0);
+                        _lastJumpTime = DateTime.UtcNow;
+                    }
+                }
+            }
+            else
+            {
+                // Chế độ Auto bình thường: Gửi lệnh cập nhật giây đếm ngược
+                _arduinoService.SendTimingUpdate(result.GreenNS, result.GreenEW);
+            }
 
             // 3. Phát tín hiệu lên Dashboard qua SignalR
             await _notificationService.SendWebsterUpdateAsync(new WebsterUpdatePayload
@@ -176,7 +206,35 @@ namespace SmartTrafficLight_Web.Controllers
             });
         }
 
+        /// <summary>POST: Enable or disable infinite mode</summary>
+        [HttpPost("mode")]
+        public async Task<IActionResult> SetMode([FromBody] ModeRequest request)
+        {
+            _arduinoService.SetInfiniteMode(request.IsInfinite);
+            await _notificationService.SendHardwareStatusAsync(new HardwareStatusPayload(
+                request.IsInfinite ? "MODE:INFINITE" : "MODE:AUTO"
+            ));
+            return Ok(new { message = $"Infinite mode set to {request.IsInfinite}", timestamp = DateTime.UtcNow });
+        }
+
+        /// <summary>POST: Safely jump to a specific traffic phase</summary>
+        [HttpPost("jump")]
+        public IActionResult JumpToState([FromBody] ForceStateRequest request)
+        {
+            if (request.StateIndex != 0 && request.StateIndex != 2)
+                return BadRequest(new { error = "stateIndex must be 0 (NS Green) or 2 (EW Green)" });
+
+            _arduinoService.RequestJump(request.StateIndex);
+
+            return Ok(new {
+                message    = $"Jump requested to state: {request.StateIndex}",
+                stateIndex = request.StateIndex,
+                timestamp  = DateTime.UtcNow
+            });
+        }
+
         public record ForceStateRequest(int StateIndex);
         public record TimingRequest(int NsGreenDuration, int EwGreenDuration);
+        public record ModeRequest(bool IsInfinite);
     }
 }

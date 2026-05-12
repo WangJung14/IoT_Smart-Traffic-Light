@@ -15,6 +15,7 @@ public class ArduinoSerialService : IArduinoSerialService, IDisposable
     private readonly IServiceProvider _serviceProvider;
     private string _latestStatus = "N/A";
     private System.Threading.Timer? _pollingTimer;
+    public bool IsInfiniteMode { get; private set; } = false;
 
     public ArduinoSerialService(ILogger<ArduinoSerialService> logger, IConfiguration config, IServiceProvider serviceProvider)
     {
@@ -141,6 +142,37 @@ public class ArduinoSerialService : IArduinoSerialService, IDisposable
         else
         {
             _logger.LogWarning("Cannot force state, Serial port is closed.");
+        }
+    }
+
+    public void SetInfiniteMode(bool enable)
+    {
+        IsInfiniteMode = enable;
+        if (_serialPort.IsOpen)
+        {
+            string command = $"M:{(enable ? "1" : "0")}\n";
+            _serialPort.Write(command);
+            _logger.LogInformation($"ADMIN: Set infinite mode -> {enable}");
+            Console.WriteLine($"[ADMIN CMD] Set Mode -> {(enable ? "INFINITE" : "AUTO")}");
+        }
+        else
+        {
+            _logger.LogWarning("Cannot set mode, Serial port is closed.");
+        }
+    }
+
+    public void RequestJump(int targetState)
+    {
+        if (_serialPort.IsOpen)
+        {
+            string command = $"J:{targetState}\n";
+            _serialPort.Write(command);
+            _logger.LogInformation($"ADMIN/AI: Requested jump to state -> {targetState}");
+            Console.WriteLine($"[ADMIN/AI CMD] Jump to -> {targetState}");
+        }
+        else
+        {
+            _logger.LogWarning("Cannot request jump, Serial port is closed.");
         }
     }
 

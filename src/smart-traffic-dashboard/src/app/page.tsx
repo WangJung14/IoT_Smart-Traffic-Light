@@ -16,6 +16,16 @@ async function forceState(stateIndex: number): Promise<string> {
   return data.message || "OK";
 }
 
+async function jumpState(stateIndex: number): Promise<string> {
+  const res = await fetch(`${API_BASE}/hardware/jump`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ stateIndex }),
+  });
+  const data = await res.json();
+  return data.message || "OK";
+}
+
 async function resetArduino(): Promise<string> {
   const res = await fetch(`${API_BASE}/hardware/reset`, { method: "POST" });
   const data = await res.json();
@@ -68,21 +78,25 @@ const DEFAULT_WEBSTER: WebsterState = {
   pcuEW: 0,
 };
 
-function parseArduinoMessage(msg: string): { nsState: LightState; ewState: LightState; seconds: number } | null {
+function parseArduinoMessage(msg: string): { nsState: LightState; ewState: LightState; seconds: number | -1 } | null {
   if (!msg) return null;
 
   // Parse light states
   const nsState: LightState = msg.includes("B-N:XANH") ? "GREEN" : msg.includes("B-N:VANG") ? "YELLOW" : "RED";
   const ewState: LightState = msg.includes("D-T:XANH") ? "GREEN" : msg.includes("D-T:VANG") ? "YELLOW" : "RED";
 
-  // Parse seconds - handle both "Con lai: 14s" AND "35s" (first message of new phase)
+  // Parse seconds - handle both "Con lai: 14s" AND "35s" (first message of new phase) AND "Con lai: INFINITE"
   let seconds: number | null = null;
 
   if (msg.includes("Con lai:")) {
     const parts = msg.split("Con lai:");
     if (parts.length > 1) {
       const secStr = parts[1].replace("s", "").trim();
-      seconds = parseInt(secStr, 10);
+      if (secStr === "INFINITE") {
+        seconds = -1;
+      } else {
+        seconds = parseInt(secStr, 10);
+      }
     }
   } else {
     // First message of new phase: "[B-N:XANH D-T:DO] 35s"
@@ -92,7 +106,7 @@ function parseArduinoMessage(msg: string): { nsState: LightState; ewState: Light
     }
   }
 
-  if (seconds !== null && !isNaN(seconds)) {
+  if (seconds !== null && (!isNaN(seconds) || seconds === -1)) {
     return { nsState, ewState, seconds };
   }
   return null;
@@ -104,6 +118,7 @@ export default function Dashboard() {
   const [connectionStatus, setConnectionStatus] = useState<"CONNECTED" | "DISCONNECTED" | "RECONNECTING" | "ERROR">("DISCONNECTED");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [trafficHistory, setTrafficHistory] = useState<{ time: string; ns: string; ew: string; sec: number }[]>([]);
+  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
   const lastUpdateRef = useRef<string>("");
 
   const addLog = (msg: string, type: LogEntry["type"] = "info") => {
@@ -154,6 +169,20 @@ export default function Dashboard() {
       const stateKey = `${nsState}-${ewState}-${seconds}`;
       if (stateKey === lastUpdateRef.current) return;
       lastUpdateRef.current = stateKey;
+
+      // Check if it's infinite mode from string
+      if (msg.includes("MODE:INFINITE")) {
+        setIsInfiniteMode(true);
+        return;
+      } else if (msg.includes("MODE:AUTO")) {
+        setIsInfiniteMode(false);
+        return;
+      }
+
+      // Handle infinite mode countdown text
+      if (seconds === -1) {
+          setIsInfiniteMode(true);
+      }
 
       setStates({
         NORTH: { currentLightState: nsState, countdownSeconds: seconds, vehicleCount: 0 },
@@ -219,6 +248,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleJumpState = async (stateIndex: number, label: string) => {
+    try {
+      addLog(`Admin: Đang chuyển luồng ưu tiên ${label}...`, "warn");
+      const msg = await jumpState(stateIndex);
+      addLog(`Admin: ${msg}`, "success");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      addLog(`Admin: Lỗi chuyển đổi - ${message}`, "error");
+    }
+  };
+
   const handleReset = async () => {
     try {
       addLog("Admin: Đang gửi lệnh Reset...", "warn");
@@ -227,6 +267,25 @@ export default function Dashboard() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       addLog(`Admin: Lỗi Reset - ${message}`, "error");
+    }
+  };
+
+  const handleToggleInfiniteMode = async () => {
+    try {
+      const newMode = !isInfiniteMode;
+      addLog(`Admin: Đang ${newMode ? "BẬT" : "TẮT"} chế độ Vô Tận...`, "warn");
+      
+      const res = await fetch(`${API_BASE}/hardware/mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isInfinite: newMode }),
+      });
+      const data = await res.json();
+      setIsInfiniteMode(newMode);
+      addLog(`Admin: ${data.message}`, "success");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      addLog(`Admin: Lỗi đổi chế độ - ${message}`, "error");
     }
   };
 
@@ -246,6 +305,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggleInfiniteMode}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold tracking-wider border transition-all ${
+                isInfiniteMode 
+                  ? "border-violet-500/50 bg-violet-500/20 text-violet-300 shadow-[0_0_10px_rgba(139,92,246,0.3)]" 
+                  : "border-slate-500/30 bg-slate-500/10 text-slate-400 hover:bg-slate-500/20"
+              }`}
+            >
+              <Zap size={13} className={isInfiniteMode ? "text-violet-400 fill-violet-400" : ""} />
+              {isInfiniteMode ? "INFINITE: ON" : "INFINITE: OFF"}
+            </button>
             <button
               onClick={handleReset}
               className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold tracking-wider border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all"
@@ -334,65 +404,39 @@ export default function Dashboard() {
                           textShadow: `0 0 12px ${color}80`,
                         }}
                       >
-                        {state.countdownSeconds.toString().padStart(2, "0")}
+                        {isInfiniteMode ? "∞" : state.countdownSeconds.toString().padStart(2, "0")}
                       </div>
 
                       {/* Direction name */}
                       <div className="mt-2 text-[10px] text-slate-500 font-medium">{DIR_VIET[dir]}</div>
 
                       {/* Admin Override Buttons */}
-                      {(dir === "NORTH" || dir === "EAST") && (
+                      {isInfiniteMode && (dir === "NORTH" || dir === "EAST") && (
                         <div className="mt-3 flex gap-1 w-full">
                           {dir === "NORTH" ? (
-                            <>
-                              <button
-                                onClick={() => handleForceState(0, "B-N → XANH")}
-                                className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
-                                style={{
-                                  borderColor: "#22c55e40",
-                                  color: "#22c55e",
-                                  background: "rgba(34,197,94,0.1)",
-                                }}
-                              >
-                                B-N→XANH
-                              </button>
-                              <button
-                                onClick={() => handleForceState(2, "B-N → ĐỎ")}
-                                className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
-                                style={{
-                                  borderColor: "#ef444440",
-                                  color: "#ef4444",
-                                  background: "rgba(239,68,68,0.1)",
-                                }}
-                              >
-                                B-N→ĐỎ
-                              </button>
-                            </>
+                            <button
+                              onClick={() => handleJumpState(0, "B-N")}
+                              className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
+                              style={{
+                                borderColor: "#22c55e40",
+                                color: "#22c55e",
+                                background: "rgba(34,197,94,0.1)",
+                              }}
+                            >
+                              ƯU TIÊN B-N
+                            </button>
                           ) : (
-                            <>
-                              <button
-                                onClick={() => handleForceState(2, "Đ-T → XANH")}
-                                className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
-                                style={{
-                                  borderColor: "#22c55e40",
-                                  color: "#22c55e",
-                                  background: "rgba(34,197,94,0.1)",
-                                }}
-                              >
-                                Đ-T→XANH
-                              </button>
-                              <button
-                                onClick={() => handleForceState(0, "Đ-T → ĐỎ")}
-                                className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
-                                style={{
-                                  borderColor: "#ef444440",
-                                  color: "#ef4444",
-                                  background: "rgba(239,68,68,0.1)",
-                                }}
-                              >
-                                Đ-T→ĐỎ
-                              </button>
-                            </>
+                            <button
+                              onClick={() => handleJumpState(2, "Đ-T")}
+                              className="flex-1 text-[9px] font-bold py-1.5 rounded border transition-all hover:scale-105"
+                              style={{
+                                borderColor: "#22c55e40",
+                                color: "#22c55e",
+                                background: "rgba(34,197,94,0.1)",
+                              }}
+                            >
+                              ƯU TIÊN Đ-T
+                            </button>
                           )}
                         </div>
                       )}
